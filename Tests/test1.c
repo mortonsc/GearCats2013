@@ -27,8 +27,8 @@ task main()
 		//if left/right button pressed, turn left/right in place
 		//if gray button pressed, go backwards
 		if (button == kEnterButton) {
-			motor[left_drive] = 100;
-			motor[right_drive] = 100;
+			motor[left_drive] = 50;
+			motor[right_drive] = 50;
 			nxtDisplayTextLine(1, "forwards",0,0,0);
 		} else if (button == kLeftButton) {
 			motor[left_drive] = 50;
@@ -39,8 +39,8 @@ task main()
 			motor[right_drive] = 50;
 			nxtDisplayTextLine(1, "right",0,0,0);
 		} else if (button == kExitButton) {
-			motor[left_drive] = -100;
-			motor[right_drive] = -100;
+			motor[left_drive] = -50;
+			motor[right_drive] = -50;
 		}
 		wait1Msec(2000);
 		motor[left_drive] = 0;
