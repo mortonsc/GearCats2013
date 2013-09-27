@@ -1,7 +1,7 @@
 #pragma config(Hubs,  S1, HTServo,  HTMotor,  none,     none)
 #pragma config(Sensor, S1,     ,               sensorI2CMuxController)
-#pragma config(Motor,  mtr_S1_C2_1,     left_drive,    tmotorTetrix, openLoop, reversed)
-#pragma config(Motor,  mtr_S1_C2_2,     right_drive,   tmotorTetrix, openLoop)
+#pragma config(Motor,  mtr_S1_C2_1,     right_drive,   tmotorTetrix, openLoop)
+#pragma config(Motor,  mtr_S1_C2_2,     left_drive,    tmotorTetrix, openLoop, reversed)
 #pragma config(Servo,  srvo_S1_C1_1,    spinner,              tServoStandard)
 #pragma config(Servo,  srvo_S1_C1_2,    servo2,               tServoNone)
 #pragma config(Servo,  srvo_S1_C1_3,    servo3,               tServoNone)
@@ -13,14 +13,39 @@
 task main()
 {
 	bool going = true;
+	//double-clicking gray button will abort
+	nNxtExitClicks = 2;
 	while (going){
-		servoTarget[spinner] = 160;
-		motor[left_drive] = 100;
-		motor[right_drive] = 100;
+		//servoTarget[spinner] = 160;
+		//wait for a button press indicating an action
+		TNxtButtons button;
+		do {
+			button = nNxtButtonPressed;
+			wait1Msec(100);
+		} while (button == kNoButton);
+		//if enter button pressed, go straight forwards
+		//if left/right button pressed, turn left/right in place
+		//if gray button pressed, go backwards
+		if (button == kEnterButton) {
+			motor[left_drive] = 100;
+			motor[right_drive] = 100;
+			nxtDisplayTextLine(1, "forwards",0,0,0);
+		} else if (button == kLeftButton) {
+			motor[left_drive] = 50;
+			motor[right_drive] = -50;
+			nxtDisplayTextLine(1, "left",0,0,0);
+		} else if (button == kRightButton) {
+			motor[left_drive] = -50;
+			motor[right_drive] = 50;
+			nxtDisplayTextLine(1, "right",0,0,0);
+		} else if (button == kExitButton) {
+			motor[left_drive] = -100;
+			motor[right_drive] = -100;
+		}
 		wait1Msec(2000);
 		motor[left_drive] = 0;
 		motor[right_drive] = 0;
-		going = false;
+		//going = false;
 	}
 
 }
