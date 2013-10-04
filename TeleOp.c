@@ -1,7 +1,7 @@
 #pragma config(Hubs,  S1, HTServo,  HTMotor,  none,     none)
 #pragma config(Sensor, S1,     ,               sensorI2CMuxController)
-#pragma config(Motor,  mtr_S1_C2_1,     right_drive,   tmotorTetrix, openLoop)
-#pragma config(Motor,  mtr_S1_C2_2,     left_drive,    tmotorTetrix, openLoop, reversed)
+#pragma config(Motor,  mtr_S1_C2_1,     right_drive,   tmotorTetrix, openLoop, reversed)
+#pragma config(Motor,  mtr_S1_C2_2,     left_drive,    tmotorTetrix, openLoop)
 #pragma config(Servo,  srvo_S1_C1_1,    servo1,               tServoNone)
 #pragma config(Servo,  srvo_S1_C1_2,    servo2,               tServoNone)
 #pragma config(Servo,  srvo_S1_C1_3,    servo3,               tServoNone)
@@ -17,8 +17,10 @@
 //disable main tasks in functions from other files
 #define MAIN_ROBOT_CODE
 
-int current_cycle;
-int beep_length;
+const float POWER_LEVEL_1 = 0.50;
+const float POWER_LEVEL_2 = 1.00;
+
+float current_power_level;
 
 int forward;
 int turn;
@@ -26,49 +28,39 @@ int turn;
 //will be run once at start of teleop
 void initializeRobot()
 {
-	current_cycle = 1;
-	beep_length = 1000;
 	left_drive_motor = left_drive;
 	right_drive_motor = right_drive;
-  // Place code here to sinitialize servos to starting positions.
+	current_power_level = POWER_LEVEL_1;
+  // Place code here to initialize servos to starting positions.
   // Sensors are automatically configured and setup by ROBOTC. They may need a brief time to stabilize.
   return;
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//                                         Main Task
-//
-// The following is the main code for the tele-op robot operation. Customize as appropriate for
-// your specific robot.
-//
-// Game controller / joystick information is sent periodically (about every 50 milliseconds) from
-// the FMS (Field Management System) to the robot. Most tele-op programs will follow the following
-// logic:
-//   1. Loop forever repeating the following actions:
-//   2. Get the latest game controller / joystick settings that have been received from the PC.
-//   3. Perform appropriate actions based on the joystick + buttons settings. This is usually a
-//      simple action:
-//      *  Joystick values are usually directly translated into power levels for a motor or
-//         position of a servo.
-//      *  Buttons are usually used to start/stop a motor or cause a servo to move to a specific
-//         position.
-//   4. Repeat the loop.
-//
-// Your program needs to continuously loop because you need to continuously respond to changes in
-// the game controller settings.
-//
-// At the end of the tele-op period, the FMS will automatically abort (stop) execution of the program.
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//zeroes a value if its magnitude is less than a certain value
+//used to create a dead zone for the motors
+int floor(int input, int min_value){
+	if (abs(input) < min_value) {
+		return 0;
+	} else {
+		return input;
+	}
+}
 
 task drive() {
 	while(true){
 		getJoystickSettings(joystick);
-		forward = joystick.joy1_y1;
-		turn = joystick.joy1_x1;
-		tank_drive(forward, turn);
+
+		//these have to be floored to create a dead zone, preventing motor drift and noise
+		forward = floor(joystick.joy1_y1, 10) * current_power_level;
+		turn = floor(joystick.joy1_x2,10) * current_power_level;
+		if (abs(forward) < 10){
+			forward = 0;
+		}
+
+
+		arcade_drive(forward, turn);
 		nxtDisplayTextLine(1, "forward: %d", forward);
 		nxtDisplayTextLine(2, "turn: %d", turn);
 	}
@@ -83,18 +75,15 @@ task main()
   while (true)
   {
 	  getJoystickSettings(joystick);
-		if (joy1Btn(1) == 1){
-  		PlayTone(500, 10);
-  	} else {
-  	/*
-  		PlayTone(1000,10);
-  		wait1Msec(beep_length);
-  		if (current_cycle % 5 == 0){
-  			beep_length -= 100;
-  		}
-  		current_cycle++;
-  		*/
-  	}
+
+
+	  //power level controls: driver can set motors to always spin at half speed, allowing more precise control
+	  if (joy1Btn(1) == 1){
+	  	current_power_level = POWER_LEVEL_1;
+	  }
+	  if (joy1Btn(2) == 1) {
+	  	current_power_level = POWER_LEVEL_2;
+	  }
 
   }
 }
