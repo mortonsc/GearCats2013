@@ -1,6 +1,12 @@
 #ifndef GEARCATS_HELPERS
 #define GEARCATS_HELPERS
 
+#define A_BTN 3
+#define B_BTN 2
+#define X_BTN 4
+#define Y_BTN 1
+
+
 int left_drive_motor;
 int right_drive_motor;
 
